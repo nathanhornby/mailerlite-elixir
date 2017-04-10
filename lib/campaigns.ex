@@ -3,9 +3,12 @@ defmodule MailerLite.Campaigns do
   Get, create, delete and manage your email campaigns.
   """
 
+  # Attributes
+  @vsn 1
   @endpoint "https://api.mailerlite.com/api/v2/campaigns"
   @headers ["X-MailerLite-ApiKey": Application.get_env(:mailerlite, :key)]
 
+  # Types
   @type campaign :: %{clicked: action,
                       date_created: String.t,
                       date_send: String.t,
@@ -17,6 +20,27 @@ defmodule MailerLite.Campaigns do
                       type: String.t}
   @type action :: %{count: non_neg_integer, rate: non_neg_integer}
 
+  @type new_campaign :: %{groups: [non_neg_integer],
+                          subject: String.t,
+                          type: String.t,
+                          ab_settings: %{ab_win_type: String.t,
+                                         send_type: String.t,
+                                         split_part: String.t,
+                                         winner_after: non_neg_integer,
+                                         winner_after_type: String.t,
+                                         values: [String.t]}}
+
+  @type campaign_response :: %{account_id: non_neg_integer,
+                               campaign_type: String.t,
+                               date: String.t,
+                               id: non_neg_integer,
+                               mail_id: non_neg_integer,
+                               options: %{campaign_type: String.t,
+                                          campaign_step: String.t,
+                                          date: String.t,
+                                          send_type: String.t}}
+
+  # MailerLite.get()
   @spec get() :: {:ok, [campaign]} | {:error, atom}
   def get do
     do_get(:sent)
@@ -25,6 +49,8 @@ defmodule MailerLite.Campaigns do
   @doc ~S"""
   Returns all campaigns you have in your account by status.
 
+  TODO: Add sorting query params
+
   Valid statuses:
   - `:sent`
   - `:outbox`
@@ -32,7 +58,7 @@ defmodule MailerLite.Campaigns do
 
   When using `get/0` the `:sent` (default) status is used.
 
-  [![API reference](https://img.shields.io/badge/MailerLite API-→-00a154.svg)](https://developers.mailerlite.com/reference#campaigns-by-type)
+  [![API reference](https://img.shields.io/badge/MailerLite API-→-00a154.svg?style=flat-square)](https://developers.mailerlite.com/reference#campaigns-by-type)
 
   ## Example requests
 
@@ -76,9 +102,7 @@ defmodule MailerLite.Campaigns do
     do_get(status)
   end
 
-  def get(_status) do
-    {:error, :invalid_status}
-  end
+  def get(_status), do: {:error, :invalid_status}
 
   defp do_get(status) do
     url = @endpoint <> "/" <> Atom.to_string(status)
@@ -92,4 +116,56 @@ defmodule MailerLite.Campaigns do
         {:error, :network_error}
     end
   end
+
+  @doc ~S"""
+  Create a new campaign. Returns the new campaign details.
+
+  [![API reference](https://img.shields.io/badge/MailerLite API-→-00a154.svg?style=flat-square)](https://developers.mailerlite.com/reference#campaigns)
+
+  ## Example requests
+
+      new_campaign = %{groups: [2984475, 3237221],
+                       subject: "A regular email campaign",
+                       type: "regular"}
+      MailerLite.Campaigns.new(new_campaign)
+      
+  ## Example response
+
+      {:ok, %{account_id: 441087,
+              campaign_type: "regular",
+              date: "2016-05-18 13:03:47",
+              id: 3043021,
+              mail_id: 3529037,
+              options: %{campaign_type: "regular",
+                         campaign_step: "step3",
+                         date: "2016-05-18 13:03:47",
+                         send_type: "regular"}}}
+
+  ## Tests
+
+      iex> new_campaign = %{groups: [6306138],
+      iex>                  subject: "A regular email campaign",
+      iex>                  type: "regular"}
+      iex> {:ok, response} = MailerLite.Campaigns.new(new_campaign)
+      iex> is_map(response)
+      true
+
+      iex> MailerLite.Campaigns.new(47)
+      {:error, :invalid_argument}
+  """
+  @spec new(new_campaign) :: {:ok, campaign_response} | {:error, atom}
+  def new(new_campaign) when is_map(new_campaign) do
+    body = Poison.encode!(new_campaign)
+    case HTTPoison.post(@endpoint, body, @headers) do
+      {:ok, response} ->
+        campaign = response
+        |> Map.get(:body)
+        |> Poison.decode!(as: %{})
+        {:ok, campaign}
+      _ ->
+        {:error, :network_error}
+    end
+  end
+
+  def new(_campaign), do: {:error, :invalid_argument}
 end
