@@ -29,6 +29,7 @@ defmodule MailerLite.Mixfile do
   defp description do
     """
     **WORK IN PROGRESS - NOT READY FOR PRODUCTION USE, CHECK BACK SOON**
+    
     An Elixir wrapper for v2 of the MailerLite API.
     """
   end

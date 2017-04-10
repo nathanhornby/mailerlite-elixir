@@ -1,5 +1,5 @@
 defmodule MailerLite do
   @moduledoc """
-  Nothing yet.
+  Nothing yet. Will eventually house internal functions.
   """
 end

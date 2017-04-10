@@ -3,4 +3,5 @@
 [![Hexdocs](https://img.shields.io/badge/docs-hexdocs-555E74.svg)](https://hexdocs.pm/mailerlite)
 
 **WORK IN PROGRESS - NOT READY FOR PRODUCTION USE, CHECK BACK SOON**
+
 An Elixir wrapper for v2 of the MailerLite API.

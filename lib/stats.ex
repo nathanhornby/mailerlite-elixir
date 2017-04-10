@@ -3,7 +3,8 @@ defmodule MailerLite.Stats do
   Account statitistics.
   """
 
-  @api_key Application.get_env(:mailerlite, :key)
+  @endpoint "https://api.mailerlite.com/api/v2/stats"
+  @headers ["X-MailerLite-ApiKey": Application.get_env(:mailerlite, :key)]
 
   @type stats :: %{subscribed: non_neg_integer,
                    unsubscribed: non_neg_integer,
@@ -15,6 +16,8 @@ defmodule MailerLite.Stats do
 
   @doc ~S"""
   Gets basic stats for the account, subscriber count, click rates etc.
+
+  [![API reference](https://img.shields.io/badge/MailerLite API-→-00a154.svg)](https://developers.mailerlite.com/reference#stats)
 
   ## Example request
 
@@ -30,19 +33,15 @@ defmodule MailerLite.Stats do
               subscribed: 10187,
               unsubscribed: 1}}
 
-  ## Example test
+  ## Tests
 
       iex> {:ok, response} = MailerLite.Stats.get
       iex> is_map(response)
       true
-
-  [![API reference](https://img.shields.io/badge/MailerLite API reference-→-00a154.svg)](https://developers.mailerlite.com/reference#stats)
   """
   @spec get() :: {:ok, stats} | {:error, atom}
   def get do
-    url = "https://api.mailerlite.com/api/v2/stats"
-    headers = ["X-MailerLite-ApiKey": @api_key]
-    case HTTPoison.get(url, headers) do
+    case HTTPoison.get(@endpoint, @headers) do
       {:ok, response} ->
         stats = response
                 |> Map.get(:body)
