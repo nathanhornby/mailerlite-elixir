@@ -4,9 +4,9 @@ defmodule MailerLite.Campaigns do
   """
 
   # Attributes
-  @vsn 1
+  @vsn 2
   @endpoint "https://api.mailerlite.com/api/v2/campaigns"
-  @headers ["X-MailerLite-ApiKey": Application.get_env(:mailerlite, :key)]
+  @headers [{"X-MailerLite-ApiKey", Application.get_env(:mailerlite, :key)},{"Content-Type", "application/json"}]
 
   # Types
   @type campaign :: %{clicked: action,
@@ -107,11 +107,12 @@ defmodule MailerLite.Campaigns do
   defp do_get(status) do
     url = @endpoint <> "/" <> Atom.to_string(status)
     case HTTPoison.get(url, @headers) do
-      {:ok, response} ->
-        campaigns = response
-        |> Map.get(:body)
-        |> Poison.decode!(as: %{})
-        {:ok, campaigns}
+      {:ok, %HTTPoison.Response{status_code: 200, body: body}} ->
+        {:ok, Poison.decode!(body, as: %{})}
+      {:ok, %HTTPoison.Response{status_code: 400}} ->
+        {:error, :bad_request}
+      {:ok, %HTTPoison.Response{status_code: 500}} ->
+        {:error, :server_error}
       _ ->
         {:error, :network_error}
     end
@@ -128,7 +129,7 @@ defmodule MailerLite.Campaigns do
                        subject: "A regular email campaign",
                        type: "regular"}
       MailerLite.Campaigns.new(new_campaign)
-      
+
   ## Example response
 
       {:ok, %{account_id: 441087,
@@ -157,15 +158,46 @@ defmodule MailerLite.Campaigns do
   def new(new_campaign) when is_map(new_campaign) do
     body = Poison.encode!(new_campaign)
     case HTTPoison.post(@endpoint, body, @headers) do
-      {:ok, response} ->
-        campaign = response
-        |> Map.get(:body)
-        |> Poison.decode!(as: %{})
-        {:ok, campaign}
+      {:ok, %HTTPoison.Response{status_code: 200, body: body}} ->
+        {:ok, Poison.decode!(body, as: %{})}
+      {:ok, %HTTPoison.Response{status_code: 400}} ->
+        {:error, :bad_request}
+      {:ok, %HTTPoison.Response{status_code: 500}} ->
+        {:error, :server_error}
       _ ->
         {:error, :network_error}
     end
   end
 
   def new(_campaign), do: {:error, :invalid_argument}
+
+  @doc ~S"""
+  Delete a (non scheduled) campaign.
+
+  [![API reference](https://img.shields.io/badge/MailerLite API-→-00a154.svg?style=flat-square)](https://developers.mailerlite.com/reference#delete-campaign)
+
+  ## Example requests
+
+      MailerLite.Campaigns.delete(6345868)
+
+  ## Example response
+
+      {:ok}
+
+  ## Test
+
+      iex> new_campaign = %{groups: [6306138],
+      iex>                  subject: "A regular email campaign",
+      iex>                  type: "regular"}
+      iex> {:ok, response} = MailerLite.Campaigns.new(new_campaign)
+      iex> MailerLite.Campaigns.delete(Map.get(response, "id"))
+      {:ok}
+  """
+  def delete(campaign) do
+    url = @endpoint <> "/" <> Integer.to_string(campaign)
+    case HTTPoison.delete(url, @headers) do
+      {:ok, _response} -> {:ok}
+      _ -> {:error, :network_error}
+    end
+  end
 end

@@ -4,7 +4,7 @@ defmodule MailerLite.Stats do
   """
 
   # Attributes
-  @vsn 1
+  @vsn 2
   @endpoint "https://api.mailerlite.com/api/v2/stats"
   @headers ["X-MailerLite-ApiKey": Application.get_env(:mailerlite, :key)]
 
@@ -66,13 +66,12 @@ defmodule MailerLite.Stats do
       _ -> @endpoint <> "?timestamp=" <> Integer.to_string(unix_timestamp)
     end
     case HTTPoison.get(url, @headers) do
-      {:ok, response} ->
-        stats = response
-                |> Map.get(:body)
-                |> Poison.decode!(as: %{})
-        {:ok, stats}
+      {:ok, %HTTPoison.Response{status_code: 200, body: body}} ->
+        {:ok, Poison.decode!(body, as: %{})}
+      {:ok, %HTTPoison.Response{status_code: 500}} ->
+        {:error, :server_error}
       _ ->
-        {:error, :general_error}
+        {:error, :network_error}
     end
   end
 end
