@@ -4,6 +4,8 @@
 [![Hexdocs](https://img.shields.io/badge/docs-hexdocs-717B94.svg?style=flat-square)](https://hexdocs.pm/mailerlite) [![Beerpay](https://img.shields.io/beerpay/nathanhornby/mailerlite-elixir.svg?style=flat-square)](https://beerpay.io/nathanhornby/mailerlite-elixir)
 
 
-**WORK IN PROGRESS - NOT READY FOR PRODUCTION USE, CHECK BACK SOON**
+**WORK IN PROGRESS - NOT READY FOR PRODUCTION USE**
+
+[Keep track of the projects progress](https://github.com/nathanhornby/mailerlite-elixir/projects/1)
 
 An Elixir wrapper for v2 of the MailerLite API.

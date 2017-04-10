@@ -3,11 +3,6 @@ defmodule MailerLite.Stats do
   Account statitistics.
   """
 
-  # Attributes
-  @vsn 2
-  @endpoint "https://api.mailerlite.com/api/v2/stats"
-  @headers ["X-MailerLite-ApiKey": Application.get_env(:mailerlite, :key)]
-
   @type unix_timestamp :: non_neg_integer
 
   @type stats :: %{subscribed: non_neg_integer,
@@ -17,6 +12,10 @@ defmodule MailerLite.Stats do
                    open_rate: float,
                    click_rate: float,
                    bounce_rate: float}
+
+  @vsn 3
+  @endpoint "https://api.mailerlite.com/api/v2/stats"
+  @headers ["X-MailerLite-ApiKey": Application.get_env(:mailerlite, :key)]
 
   @spec get() :: {:ok, stats} | {:error, atom}
   def get do

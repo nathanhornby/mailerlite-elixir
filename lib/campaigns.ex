@@ -3,22 +3,15 @@ defmodule MailerLite.Campaigns do
   Get, create, delete and manage your email campaigns.
   """
 
-  # Attributes
-  @vsn 2
-  @endpoint "https://api.mailerlite.com/api/v2/campaigns"
-  @headers [{"X-MailerLite-ApiKey", Application.get_env(:mailerlite, :key)},{"Content-Type", "application/json"}]
-
-  # Types
-  @type campaign :: %{clicked: action,
+  @type campaign :: %{clicked: %{count: non_neg_integer, rate: non_neg_integer},
                       date_created: String.t,
                       date_send: String.t,
                       id: non_neg_integer,
                       name: String.t,
-                      opened: action,
+                      opened: %{count: non_neg_integer, rate: non_neg_integer},
                       status: String.t,
                       total_recipients: non_neg_integer,
                       type: String.t}
-  @type action :: %{count: non_neg_integer, rate: non_neg_integer}
 
   @type new_campaign :: %{groups: [non_neg_integer],
                           subject: String.t,
@@ -30,17 +23,59 @@ defmodule MailerLite.Campaigns do
                                          winner_after_type: String.t,
                                          values: [String.t]}}
 
-  @type campaign_response :: %{account_id: non_neg_integer,
-                               campaign_type: String.t,
-                               date: String.t,
-                               id: non_neg_integer,
-                               mail_id: non_neg_integer,
-                               options: %{campaign_type: String.t,
-                                          campaign_step: String.t,
-                                          date: String.t,
-                                          send_type: String.t}}
+  @type new_campaign_response :: %{account_id: non_neg_integer,
+                                   campaign_type: String.t,
+                                   date: String.t,
+                                   id: non_neg_integer,
+                                   mail_id: non_neg_integer,
+                                   options: %{campaign_type: String.t,
+                                              campaign_step: String.t,
+                                              date: String.t,
+                                              send_type: String.t}}
 
-  # MailerLite.get()
+  @vsn 3
+  @endpoint "https://api.mailerlite.com/api/v2/campaigns"
+  @headers [{"X-MailerLite-ApiKey", Application.get_env(:mailerlite, :key)},{"Content-Type", "application/json"}]
+
+  @doc ~S"""
+  Delete a (non scheduled) campaign.
+
+  [![API reference](https://img.shields.io/badge/MailerLite API-→-00a154.svg?style=flat-square)](https://developers.mailerlite.com/reference#delete-campaign)
+
+  ## Example requests
+
+      MailerLite.Campaigns.delete(6345868)
+
+  ## Example response
+
+      {:ok}
+
+  ## Test
+
+      iex> new_campaign = %{groups: [6306138],
+      iex>                  subject: "A regular email campaign",
+      iex>                  type: "regular"}
+      iex> {:ok, response} = MailerLite.Campaigns.new(new_campaign)
+      iex> MailerLite.Campaigns.delete(Map.get(response, "id"))
+      {:ok}
+  """
+  @spec delete(MailerLite.id) :: {:ok} | {:error, atom}
+  def delete(campaign) when is_integer(campaign) do
+    url = @endpoint <> "/" <> Integer.to_string(campaign)
+    case HTTPoison.delete(url, @headers) do
+      {:ok, %HTTPoison.Response{status_code: 200}} ->
+        {:ok}
+      {:ok, %HTTPoison.Response{status_code: 400}} ->
+        {:error, :bad_request}
+      {:ok, %HTTPoison.Response{status_code: 500}} ->
+        {:error, :server_error}
+      _ ->
+        {:error, :network_error}
+    end
+  end
+
+  def delete(_campaign), do: {:error, :invalid_argument}
+
   @spec get() :: {:ok, [campaign]} | {:error, atom}
   def get do
     do_get(:sent)
@@ -76,17 +111,6 @@ defmodule MailerLite.Campaigns do
                status: "sent",
                total_recipients: 35,
                type: "regular"}]}
-
-  ## Errors
-
-  If using anything other than a valid status `atom`:
-      {:error, :invalid_status}
-
-  If there's a problem connecting to the MailerLite API:
-      {:error, :network_error}
-
-  If you have provided an invalid API key:
-      {:error, :auth_invalid}
 
   ## Tests
 
@@ -154,7 +178,7 @@ defmodule MailerLite.Campaigns do
       iex> MailerLite.Campaigns.new(47)
       {:error, :invalid_argument}
   """
-  @spec new(new_campaign) :: {:ok, campaign_response} | {:error, atom}
+  @spec new(new_campaign) :: {:ok, new_campaign_response} | {:error, atom}
   def new(new_campaign) when is_map(new_campaign) do
     body = Poison.encode!(new_campaign)
     case HTTPoison.post(@endpoint, body, @headers) do
@@ -170,34 +194,4 @@ defmodule MailerLite.Campaigns do
   end
 
   def new(_campaign), do: {:error, :invalid_argument}
-
-  @doc ~S"""
-  Delete a (non scheduled) campaign.
-
-  [![API reference](https://img.shields.io/badge/MailerLite API-→-00a154.svg?style=flat-square)](https://developers.mailerlite.com/reference#delete-campaign)
-
-  ## Example requests
-
-      MailerLite.Campaigns.delete(6345868)
-
-  ## Example response
-
-      {:ok}
-
-  ## Test
-
-      iex> new_campaign = %{groups: [6306138],
-      iex>                  subject: "A regular email campaign",
-      iex>                  type: "regular"}
-      iex> {:ok, response} = MailerLite.Campaigns.new(new_campaign)
-      iex> MailerLite.Campaigns.delete(Map.get(response, "id"))
-      {:ok}
-  """
-  def delete(campaign) do
-    url = @endpoint <> "/" <> Integer.to_string(campaign)
-    case HTTPoison.delete(url, @headers) do
-      {:ok, _response} -> {:ok}
-      _ -> {:error, :network_error}
-    end
-  end
 end

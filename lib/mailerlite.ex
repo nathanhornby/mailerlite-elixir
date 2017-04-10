@@ -5,4 +5,7 @@ defmodule MailerLite do
 
   # Attributes
   @vsn 1
+
+  # Types
+  @type id :: non_neg_integer
 end
