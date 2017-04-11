@@ -33,6 +33,10 @@ defmodule MailerLite.Campaigns do
                                               date: String.t,
                                               send_type: String.t}}
 
+  @type get_options :: %{limit: non_neg_integer,
+                         offset: non_neg_integer,
+                         order: String.t}
+
   @vsn 3
   @endpoint "https://api.mailerlite.com/api/v2/campaigns"
   @headers [{"X-MailerLite-ApiKey", Application.get_env(:mailerlite, :key)},{"Content-Type", "application/json"}]
@@ -67,6 +71,8 @@ defmodule MailerLite.Campaigns do
         {:ok}
       {:ok, %HTTPoison.Response{status_code: 400}} ->
         {:error, :bad_request}
+      {:ok, %HTTPoison.Response{status_code: 404}} ->
+        {:error, :not_found}
       {:ok, %HTTPoison.Response{status_code: 500}} ->
         {:error, :server_error}
       _ ->
@@ -78,13 +84,18 @@ defmodule MailerLite.Campaigns do
 
   @spec get() :: {:ok, [campaign]} | {:error, atom}
   def get do
-    do_get(:sent)
+    do_get(:sent, false)
   end
+
+  @spec get(:sent | :outbox | :draft) :: {:ok, [campaign]} | {:error, atom}
+  def get(status) when status in [:sent, :outbox, :draft] do
+    do_get(status, false)
+  end
+
+  def get(_status), do: {:error, :invalid_status}
 
   @doc ~S"""
   Returns all campaigns you have in your account by status.
-
-  TODO: Add sorting query params
 
   Valid statuses:
   - `:sent`
@@ -93,12 +104,21 @@ defmodule MailerLite.Campaigns do
 
   When using `get/0` the `:sent` (default) status is used.
 
+  ## Sort and paginate
+
+  When using `get/2` you can provide a `map` of options to enable sorting and pagination:
+
+      %{limit: 10,
+        offset: 0,
+        order: "DESC"} # DESC or ASC
+
   [![API reference](https://img.shields.io/badge/MailerLite API-→-00a154.svg?style=flat-square)](https://developers.mailerlite.com/reference#campaigns-by-type)
 
   ## Example requests
 
       MailerLite.Campaigns.get
       MailerLite.Campaigns.get(:draft)
+      MailerLite.Campaigns.get(:sent, %{order: "ASC"})
 
   ## Example response
 
@@ -118,23 +138,38 @@ defmodule MailerLite.Campaigns do
       iex> is_list(response)
       true
 
-      iex> {:error, :invalid_status} = MailerLite.Campaigns.get("4092739")
+      iex> {:ok, response} = MailerLite.Campaigns.get(:sent, %{order: "ASC"})
+      iex> is_list(response)
+      true
+
+      iex> {:error, :invalid_argument} = MailerLite.Campaigns.get("4092739", :options)
+      {:error, :invalid_argument}
+
+      iex> {:error, :invalid_status} = MailerLite.Campaigns.get(:stared)
       {:error, :invalid_status}
   """
-  @spec get(atom) :: {:ok, [campaign]} | {:error, atom}
-  def get(status) when status in [:sent, :outbox, :draft] do
-    do_get(status)
+  @spec get(:sent | :outbox | :draft, get_options) :: {:ok, [campaign]} | {:error, atom}
+  def get(status, options)
+      when status in [:sent, :outbox, :draft] and is_map(options) do
+    do_get(status, options)
   end
 
-  def get(_status), do: {:error, :invalid_status}
+  def get(_status, _options), do: {:error, :invalid_argument}
 
-  defp do_get(status) do
-    url = @endpoint <> "/" <> Atom.to_string(status)
+  defp do_get(status, options) do
+    url = case options do
+      false -> @endpoint <> "/" <> Atom.to_string(status)
+      _ ->
+        options_list = Map.to_list(options)
+        options_formatted = ""
+        for {key, value} <- options_list do
+          options_formatted <> "?" <> Atom.to_string(key) <> "=" <> value <> "&"
+        end
+        @endpoint <> "/" <> Atom.to_string(status) <> options_formatted
+    end
     case HTTPoison.get(url, @headers) do
       {:ok, %HTTPoison.Response{status_code: 200, body: body}} ->
         {:ok, Poison.decode!(body, as: %{})}
-      {:ok, %HTTPoison.Response{status_code: 400}} ->
-        {:error, :bad_request}
       {:ok, %HTTPoison.Response{status_code: 500}} ->
         {:error, :server_error}
       _ ->

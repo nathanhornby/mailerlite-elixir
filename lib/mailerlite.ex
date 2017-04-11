@@ -1,11 +1,10 @@
 defmodule MailerLite do
   @moduledoc """
-  Nothing yet. Will eventually house internal functions.
+  Shared types and functions used by other modules.
   """
 
-  # Attributes
-  @vsn 1
-
-  # Types
+  @typedoc """
+  MailerLite ID's are comprised of 7 `non_neg_integer`s. i.e. `6306138`
+  """
   @type id :: non_neg_integer
 end
