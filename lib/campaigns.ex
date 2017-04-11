@@ -229,4 +229,79 @@ defmodule MailerLite.Campaigns do
   end
 
   def new(_campaign), do: {:error, :invalid_argument}
+
+  @doc ~S"""
+  Uploads an HTML and plain text template to a campaign.
+
+  ## Important
+
+  Your HTML template must contain an unsubscribe link:
+
+      <a href="{$unsubscribe}">Unsubscribe</a>
+
+  Your plain text email should contain these variables:
+
+  - {$unsubscribe} : Unsubscribe link
+  - {$url} : URL to your HTML newsletter
+
+  [![API reference](https://img.shields.io/badge/MailerLite API-→-00a154.svg?style=flat-square)](https://developers.mailerlite.com/reference#put-custom-content-to-campaign)
+
+  ## Example request
+
+      campaign = 3043021
+      html = ~s(<h1>Title</h1><a href="{$unsubscribe}">Unsubscribe</a>)
+      plain = "Open HTML newsletter: {$url}. Unsubscribe: {$unsubscribe}"
+      auto_inline = false
+
+      MailerLite.Campaigns.upload_template(campaign, html, plain, auto_inline)
+
+  ## Example response
+
+      {:ok}
+
+  ## Tests
+
+      iex> html = ~s(<h1>Title</h1><a href="{$unsubscribe}">Unsubscribe</a>)
+      iex> plain = "Open HTML newsletter: {$url}. Unsubscribe: {$unsubscribe}"
+      iex> MailerLite.Campaigns.upload_template(6654216, html, plain, false)
+      {:ok}
+
+      iex> html = ~s(<h1>Title</h1>)
+      iex> plain = "Open HTML newsletter: {$url}."
+      iex> MailerLite.Campaigns.upload_template(6654216, html, plain, false)
+      {:error, 422, "Unsubscribe link is missing in HTML template"}
+
+      iex> MailerLite.Campaigns.upload_template("campaign", 4, :banana, 69)
+      {:error, :invalid_argument}
+  """
+  @spec upload_template(MailerLite.id, String.t, String.t, boolean) ::
+        {:ok} |
+        {:error, atom} |
+        {:error, non_neg_integer, String.t}
+  def upload_template(campaign, html, plain, auto_inline)
+      when is_integer(campaign)
+      and is_binary(html)
+      and is_binary(plain)
+      and is_boolean(auto_inline) do
+    body = %{html: html, plain: plain, auto_inline: auto_inline}
+    |> Poison.encode!
+    url = @endpoint <> "/" <> Integer.to_string(campaign) <> "/content"
+    case HTTPoison.put(url, body, @headers) do
+      {:ok, %HTTPoison.Response{status_code: 200}} ->
+        {:ok}
+      {:ok, %HTTPoison.Response{status_code: 422, body: body}} ->
+        message = body
+                  |> Poison.decode!
+                  |> Map.get("error")
+                  |> Map.get("message")
+        {:error, 422, message}
+      {:ok, %HTTPoison.Response{status_code: 500}} ->
+        {:error, :server_error}
+      _ ->
+        {:error, :network_error}
+    end
+  end
+
+  def upload_template(_campaign, _html, _plain, _auto_inline),
+      do: {:error, :invalid_argument}
 end
