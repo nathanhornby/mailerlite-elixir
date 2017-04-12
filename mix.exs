@@ -1,7 +1,7 @@
 defmodule MailerLite.Mixfile do
   use Mix.Project
 
-  @version "0.1.0"
+  @version "0.2.0"
   @github  "https://github.com/nathanhornby/mailerlite-elixir"
 
   def project do
@@ -29,7 +29,7 @@ defmodule MailerLite.Mixfile do
   defp description do
     """
     **WORK IN PROGRESS - NOT READY FOR PRODUCTION USE, CHECK BACK SOON**
-    
+
     An Elixir wrapper for v2 of the MailerLite API.
     """
   end

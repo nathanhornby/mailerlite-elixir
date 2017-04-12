@@ -13,7 +13,6 @@ defmodule MailerLite.Stats do
                    click_rate: float,
                    bounce_rate: float}
 
-  @vsn 3
   @endpoint "https://api.mailerlite.com/api/v2/stats"
   @headers ["X-MailerLite-ApiKey": Application.get_env(:mailerlite, :key)]
 

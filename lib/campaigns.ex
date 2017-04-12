@@ -37,9 +37,101 @@ defmodule MailerLite.Campaigns do
                          offset: non_neg_integer,
                          order: String.t}
 
-  @vsn 3
   @endpoint "https://api.mailerlite.com/api/v2/campaigns"
   @headers [{"X-MailerLite-ApiKey", Application.get_env(:mailerlite, :key)},{"Content-Type", "application/json"}]
+
+  @doc ~S"""
+  Cancels a campaign which has `outbox` status.
+
+  TODO Use Elixir native Date for input/output
+
+  [![API reference](https://img.shields.io/badge/MailerLite API-→-00a154.svg?style=flat-square)](https://developers.mailerlite.com/reference#campaign-actions-and-triggers)
+
+  ## Example requests
+
+      MailerLite.Campaigns.cancel(6654216)
+
+  ## Example response
+
+      %{account_id: 123456,
+        campaign_name: "An email campaign",
+        campaign_type: "regular",
+        clicked: null,
+        count: null,
+        date: "2016-05-30 13:45:23",
+        end_time: "2016-06-30 13:45:23",
+        id: 1234567,
+        mails: [%{code: "t4h8j0",
+                  date: "2015-12-28 17:25:31",
+                  from: "demo@mailerlite.com",
+                  from_name: "Demo",
+                  groups: [%{active: 7,
+                             bounced: 0,
+                             clicked: 1,
+                             date: "2015-12-16 14:43:46"
+                             id: 2984475,
+                             junk: 0,
+                             name: "Personal",
+                             opened: 2,
+                             ordering: 5,
+                             sent: 4,
+                             total: 7,
+                             updated: "2016-01-29 07:45:54"
+                             updating: 0,
+                             unconfirmed: 0,
+                             unsubscribed: 0}],
+                  host: "mailerlite.com",
+                  id: 2851096,
+                  language: %{code: "en",
+                              title: "English"},
+                  send_date: "2016-09-30 15:15:00",
+                  subject: "Test regular campaign",
+                  type: "custom_html",
+                  updated: "2016-02-04 11:55:01",
+                  url: "Test-regular-campaign-2851096"}]
+        mail_id: 0987543,
+        opened: null,
+        send_date: "2016-09-30 15:15:00",
+        status: "draft",
+        timezone: "120"}
+
+  ## Tests
+
+      iex> new_campaign = %{groups: [6306138],
+      iex>                  subject: "A temporary campaign",
+      iex>                  type: "regular"}
+      iex> {:ok, new_response} = MailerLite.Campaigns.new(new_campaign)
+      iex> campaign_id = Map.get(new_response, "id")
+      iex> send_options = %{analytics: 0,
+      iex>                  date: "2018-05-01 09:31:00",
+      iex>                  type: 2}
+      iex> MailerLite.Campaigns.send(campaign_id, send_options)
+      iex> {:ok, response} = MailerLite.Campaigns.cancel(campaign_id)
+      iex> is_map(response)
+      true
+
+      iex> MailerLite.Campaigns.cancel(0000001)
+      {:error, :not_found}
+
+      iex> MailerLite.Campaigns.cancel("47")
+      {:error, :invalid_argument}
+  """
+  @spec cancel(MailerLite.id) :: {:ok, struct} | {:error, struct}
+  def cancel(campaign) when is_integer(campaign) do
+    url = @endpoint <> "/" <> Integer.to_string(campaign) <> "/actions/cancel"
+    case HTTPoison.post(url, "", @headers) do
+      {:ok, %HTTPoison.Response{status_code: 200, body: body}} ->
+        {:ok, Poison.decode!(body, as: %{})}
+      {:ok, %HTTPoison.Response{status_code: 404}} ->
+        {:error, :not_found}
+      {:ok, %HTTPoison.Response{status_code: 500}} ->
+        {:error, :server_error}
+      _ ->
+        {:error, :network_error}
+    end
+  end
+
+  def cancel(_campaign), do: {:error, :invalid_argument}
 
   @doc ~S"""
   Delete a (non scheduled) campaign.
@@ -230,6 +322,133 @@ defmodule MailerLite.Campaigns do
 
   def new(_campaign), do: {:error, :invalid_argument}
 
+  @spec send(MailerLite.id) :: {:ok, struct} | {:error, atom}
+  def send(campaign) when is_integer(campaign) do
+    url = @endpoint <> "/" <> Integer.to_string(campaign) <> "/actions/send"
+    case HTTPoison.post(url, "", @headers) do
+      {:ok, %HTTPoison.Response{status_code: 200, body: body}} ->
+        {:ok, Poison.decode!(body, as: %{})}
+      {:ok, %HTTPoison.Response{status_code: 404}} ->
+        {:error, :not_found}
+      {:ok, %HTTPoison.Response{status_code: 500}} ->
+        {:error, :server_error}
+      _ ->
+        {:error, :network_error}
+    end
+  end
+
+  def send(_campaign), do: {:error, :invalid_argument}
+
+  @doc ~S"""
+  Schedule and send a campaign that has `draft`status and has `step` value equal to `3`.
+
+  TODO Use Elixir native Date for input/output
+
+  [![API reference](https://img.shields.io/badge/MailerLite API-→-00a154.svg?style=flat-square)](https://developers.mailerlite.com/reference#campaign-actions-and-triggers)
+
+  ## Example requests
+
+      MailerLite.Campaigns.send(6654216)
+
+      send_options = %{analytics: 1,
+                       date: "2017-05-01 09:31:00",
+                       type: 2,
+                       followup_date: "2017-05-01 09:31",
+                       followup_schedule: "specific"
+                       followup_timezone_id: 2}
+      MailerLite.Campaigns.send(6654216, send_options)
+
+  ## Example response
+
+      %{account_id: 123456,
+        campaign_name: "An email campaign",
+        campaign_type: "regular",
+        clicked: null,
+        count: null,
+        date: "2016-05-30 13:45:23",
+        end_time: "2016-06-30 13:45:23",
+        id: 1234567,
+        mails: [%{code: "t4h8j0",
+                  date: "2015-12-28 17:25:31",
+                  from: "demo@mailerlite.com",
+                  from_name: "Demo",
+                  groups: [%{active: 7,
+                             bounced: 0,
+                             clicked: 1,
+                             date: "2015-12-16 14:43:46"
+                             id: 2984475,
+                             junk: 0,
+                             name: "Personal",
+                             opened: 2,
+                             ordering: 5,
+                             sent: 4,
+                             total: 7,
+                             updated: "2016-01-29 07:45:54"
+                             updating: 0,
+                             unconfirmed: 0,
+                             unsubscribed: 0}],
+                  host: "mailerlite.com",
+                  id: 2851096,
+                  language: %{code: "en",
+                              title: "English"},
+                  send_date: "2016-09-30 15:15:00",
+                  subject: "Test regular campaign",
+                  type: "custom_html",
+                  updated: "2016-02-04 11:55:01",
+                  url: "Test-regular-campaign-2851096"}]
+        mail_id: 0987543,
+        opened: null,
+        send_date: "2016-09-30 15:15:00",
+        status: "draft",
+        timezone: "120"}
+
+  ## Tests
+
+      iex> new_campaign = %{groups: [6306138],
+      iex>                  subject: "A temporary campaign",
+      iex>                  type: "regular"}
+      iex> {:ok, new_response} = MailerLite.Campaigns.new(new_campaign)
+      iex> {:ok, response} = MailerLite.Campaigns.send(Map.get(new_response, "id"))
+      iex> is_map(response)
+      true
+
+      iex> new_campaign = %{groups: [6306138],
+      iex>                  subject: "A temporary campaign",
+      iex>                  type: "regular"}
+      iex> send_options = %{analytics: 0,
+      iex>                  date: "2018-05-01 09:31:00",
+      iex>                  type: 2}
+      iex> {:ok, new_response} = MailerLite.Campaigns.new(new_campaign)
+      iex> {:ok, response} = MailerLite.Campaigns.send(Map.get(new_response, "id"), send_options)
+      iex> is_map(response)
+      true
+
+      iex> MailerLite.Campaigns.send(0000001)
+      {:error, :not_found}
+
+      iex> MailerLite.Campaigns.send("campaign", 4)
+      {:error, :invalid_argument}
+  """
+  @spec send(MailerLite.id, struct) :: {:ok, struct} | {:error, atom}
+  def send(campaign, options) when is_integer(campaign) and is_map(options) do
+    url = @endpoint <> "/" <> Integer.to_string(campaign) <> "/actions/send"
+    body = Poison.encode!(options)
+    case HTTPoison.post(url, body, @headers) do
+      {:ok, %HTTPoison.Response{status_code: 200, body: body}} ->
+        {:ok, Poison.decode!(body, as: %{})}
+      {:ok, %HTTPoison.Response{status_code: 404}} ->
+        {:error, :not_found}
+      {:ok, %HTTPoison.Response{status_code: 500}} ->
+        {:error, :server_error}
+      {:ok, %HTTPoison.Response{body: body}} ->
+        {:error, body}
+      _ ->
+        {:error, :network_error}
+    end
+  end
+
+  def send(_campaign, _options), do: {:error, :invalid_argument}
+
   @doc ~S"""
   Uploads an HTML and plain text template to a campaign.
 
@@ -241,8 +460,8 @@ defmodule MailerLite.Campaigns do
 
   Your plain text email should contain these variables:
 
-  - {$unsubscribe} : Unsubscribe link
-  - {$url} : URL to your HTML newsletter
+  - `{$unsubscribe}` : Unsubscribe link
+  - `{$url}` : URL to your HTML newsletter
 
   [![API reference](https://img.shields.io/badge/MailerLite API-→-00a154.svg?style=flat-square)](https://developers.mailerlite.com/reference#put-custom-content-to-campaign)
 
