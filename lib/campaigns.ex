@@ -38,7 +38,6 @@ defmodule MailerLite.Campaigns do
                          order: String.t}
 
   @endpoint "https://api.mailerlite.com/api/v2/campaigns"
-  @headers [{"X-MailerLite-ApiKey", Application.get_env(:mailerlite, :key)},{"Content-Type", "application/json"}]
 
   @doc ~S"""
   Cancels a campaign which has `outbox` status.
@@ -119,16 +118,7 @@ defmodule MailerLite.Campaigns do
   @spec cancel(MailerLite.id) :: {:ok, struct} | {:error, struct}
   def cancel(campaign) when is_integer(campaign) do
     url = @endpoint <> "/" <> Integer.to_string(campaign) <> "/actions/cancel"
-    case HTTPoison.post(url, "", @headers) do
-      {:ok, %HTTPoison.Response{status_code: 200, body: body}} ->
-        {:ok, Poison.decode!(body, as: %{})}
-      {:ok, %HTTPoison.Response{status_code: 404}} ->
-        {:error, :not_found}
-      {:ok, %HTTPoison.Response{status_code: 500}} ->
-        {:error, :server_error}
-      _ ->
-        {:error, :network_error}
-    end
+    MailerLite.post(url, "")
   end
 
   def cancel(_campaign), do: {:error, :invalid_argument}
@@ -153,23 +143,12 @@ defmodule MailerLite.Campaigns do
       iex>                  type: "regular"}
       iex> {:ok, response} = MailerLite.Campaigns.new(new_campaign)
       iex> MailerLite.Campaigns.delete(Map.get(response, "id"))
-      {:ok}
+      {:ok, %{"success" => true}}
   """
-  @spec delete(MailerLite.id) :: {:ok} | {:error, atom}
+  @spec delete(MailerLite.id) :: {:ok, map} | {:error, atom}
   def delete(campaign) when is_integer(campaign) do
     url = @endpoint <> "/" <> Integer.to_string(campaign)
-    case HTTPoison.delete(url, @headers) do
-      {:ok, %HTTPoison.Response{status_code: 200}} ->
-        {:ok}
-      {:ok, %HTTPoison.Response{status_code: 400}} ->
-        {:error, :bad_request}
-      {:ok, %HTTPoison.Response{status_code: 404}} ->
-        {:error, :not_found}
-      {:ok, %HTTPoison.Response{status_code: 500}} ->
-        {:error, :server_error}
-      _ ->
-        {:error, :network_error}
-    end
+    MailerLite.delete(url)
   end
 
   def delete(_campaign), do: {:error, :invalid_argument}
@@ -259,14 +238,7 @@ defmodule MailerLite.Campaigns do
         end
         @endpoint <> "/" <> Atom.to_string(status) <> options_formatted
     end
-    case HTTPoison.get(url, @headers) do
-      {:ok, %HTTPoison.Response{status_code: 200, body: body}} ->
-        {:ok, Poison.decode!(body, as: %{})}
-      {:ok, %HTTPoison.Response{status_code: 500}} ->
-        {:error, :server_error}
-      _ ->
-        {:error, :network_error}
-    end
+    MailerLite.get(url)
   end
 
   @doc ~S"""
@@ -308,16 +280,7 @@ defmodule MailerLite.Campaigns do
   @spec new(new_campaign) :: {:ok, new_campaign_response} | {:error, atom}
   def new(new_campaign) when is_map(new_campaign) do
     body = Poison.encode!(new_campaign)
-    case HTTPoison.post(@endpoint, body, @headers) do
-      {:ok, %HTTPoison.Response{status_code: 200, body: body}} ->
-        {:ok, Poison.decode!(body, as: %{})}
-      {:ok, %HTTPoison.Response{status_code: 400}} ->
-        {:error, :bad_request}
-      {:ok, %HTTPoison.Response{status_code: 500}} ->
-        {:error, :server_error}
-      _ ->
-        {:error, :network_error}
-    end
+    MailerLite.post(@endpoint, body)
   end
 
   def new(_campaign), do: {:error, :invalid_argument}
@@ -325,16 +288,7 @@ defmodule MailerLite.Campaigns do
   @spec send(MailerLite.id) :: {:ok, struct} | {:error, atom}
   def send(campaign) when is_integer(campaign) do
     url = @endpoint <> "/" <> Integer.to_string(campaign) <> "/actions/send"
-    case HTTPoison.post(url, "", @headers) do
-      {:ok, %HTTPoison.Response{status_code: 200, body: body}} ->
-        {:ok, Poison.decode!(body, as: %{})}
-      {:ok, %HTTPoison.Response{status_code: 404}} ->
-        {:error, :not_found}
-      {:ok, %HTTPoison.Response{status_code: 500}} ->
-        {:error, :server_error}
-      _ ->
-        {:error, :network_error}
-    end
+    MailerLite.post(url, "")
   end
 
   def send(_campaign), do: {:error, :invalid_argument}
@@ -433,18 +387,7 @@ defmodule MailerLite.Campaigns do
   def send(campaign, options) when is_integer(campaign) and is_map(options) do
     url = @endpoint <> "/" <> Integer.to_string(campaign) <> "/actions/send"
     body = Poison.encode!(options)
-    case HTTPoison.post(url, body, @headers) do
-      {:ok, %HTTPoison.Response{status_code: 200, body: body}} ->
-        {:ok, Poison.decode!(body, as: %{})}
-      {:ok, %HTTPoison.Response{status_code: 404}} ->
-        {:error, :not_found}
-      {:ok, %HTTPoison.Response{status_code: 500}} ->
-        {:error, :server_error}
-      {:ok, %HTTPoison.Response{body: body}} ->
-        {:error, body}
-      _ ->
-        {:error, :network_error}
-    end
+    MailerLite.post(url, body)
   end
 
   def send(_campaign, _options), do: {:error, :invalid_argument}
@@ -483,18 +426,18 @@ defmodule MailerLite.Campaigns do
       iex> html = ~s(<h1>Title</h1><a href="{$unsubscribe}">Unsubscribe</a>)
       iex> plain = "Open HTML newsletter: {$url}. Unsubscribe: {$unsubscribe}"
       iex> MailerLite.Campaigns.upload_template(6654216, html, plain, false)
-      {:ok}
+      {:ok, %{"success" => true}}
 
       iex> html = ~s(<h1>Title</h1>)
       iex> plain = "Open HTML newsletter: {$url}."
       iex> MailerLite.Campaigns.upload_template(6654216, html, plain, false)
-      {:error, 422, "Unsubscribe link is missing in HTML template"}
+      {:error, :unprocessable_entity}
 
       iex> MailerLite.Campaigns.upload_template("campaign", 4, :banana, 69)
       {:error, :invalid_argument}
   """
   @spec upload_template(MailerLite.id, String.t, String.t, boolean) ::
-        {:ok} |
+        {:ok, map} |
         {:error, atom} |
         {:error, non_neg_integer, String.t}
   def upload_template(campaign, html, plain, auto_inline)
@@ -505,22 +448,9 @@ defmodule MailerLite.Campaigns do
     body = %{html: html, plain: plain, auto_inline: auto_inline}
     |> Poison.encode!
     url = @endpoint <> "/" <> Integer.to_string(campaign) <> "/content"
-    case HTTPoison.put(url, body, @headers) do
-      {:ok, %HTTPoison.Response{status_code: 200}} ->
-        {:ok}
-      {:ok, %HTTPoison.Response{status_code: 422, body: body}} ->
-        message = body
-                  |> Poison.decode!
-                  |> Map.get("error")
-                  |> Map.get("message")
-        {:error, 422, message}
-      {:ok, %HTTPoison.Response{status_code: 500}} ->
-        {:error, :server_error}
-      _ ->
-        {:error, :network_error}
-    end
+    MailerLite.put(url, body)
   end
 
   def upload_template(_campaign, _html, _plain, _auto_inline),
-      do: {:error, :invalid_argument}
+    do: {:error, :invalid_argument}
 end

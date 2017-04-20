@@ -14,7 +14,6 @@ defmodule MailerLite.Stats do
                    bounce_rate: float}
 
   @endpoint "https://api.mailerlite.com/api/v2/stats"
-  @headers ["X-MailerLite-ApiKey": Application.get_env(:mailerlite, :key)]
 
   @spec get() :: {:ok, stats} | {:error, atom}
   def get do
@@ -63,13 +62,6 @@ defmodule MailerLite.Stats do
       :now -> @endpoint
       _ -> @endpoint <> "?timestamp=" <> Integer.to_string(unix_timestamp)
     end
-    case HTTPoison.get(url, @headers) do
-      {:ok, %HTTPoison.Response{status_code: 200, body: body}} ->
-        {:ok, Poison.decode!(body, as: %{})}
-      {:ok, %HTTPoison.Response{status_code: 500}} ->
-        {:error, :server_error}
-      _ ->
-        {:error, :network_error}
-    end
+    MailerLite.get(url)
   end
 end
