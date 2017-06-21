@@ -44,7 +44,7 @@ defmodule MailerLite.Mixfile do
   defp deps do
     [{:httpoison, "~> 0.11.1"},
      {:poison, "~> 3.0"},
-     {:credo, "~> 0.7", only: [:dev, :test]},
+     {:credo, "~> 0.8.1", only: [:dev, :test]},
      {:ex_doc, "~> 0.14", only: :dev, runtime: false}]
   end
 end
