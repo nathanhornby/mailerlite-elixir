@@ -31,23 +31,23 @@ defmodule MailerLite do
   # Internal HTTP client
 
   def get(url) do
-    HTTPoison.get(url, @headers)
-    |> process_response()
+    response = HTTPoison.get(url, @headers)
+    process_response(response)
   end
 
   def post(url, body) do
-    HTTPoison.post(url, body, @headers)
-    |> process_response()
+    response = HTTPoison.post(url, body, @headers)
+    process_response(response)
   end
 
   def put(url, body) do
-    HTTPoison.put(url, body, @headers)
-    |> process_response()
+    response = HTTPoison.put(url, body, @headers)
+    process_response(response)
   end
 
   def delete(url) do
-    HTTPoison.delete(url, @headers)
-    |> process_response()
+    response = HTTPoison.delete(url, @headers)
+    process_response(response)
   end
 
   defp process_response(response) do

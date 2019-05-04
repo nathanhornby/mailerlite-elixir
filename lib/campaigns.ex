@@ -96,13 +96,13 @@ defmodule MailerLite.Campaigns do
 
   ## Tests
 
-      iex> new_campaign = %{groups: [6306138],
+      iex> new_campaign = %{groups: [24992054],
       iex>                  subject: "A temporary campaign",
       iex>                  type: "regular"}
       iex> {:ok, new_response} = MailerLite.Campaigns.new(new_campaign)
       iex> campaign_id = Map.get(new_response, "id")
       iex> send_options = %{analytics: 0,
-      iex>                  date: "2018-05-01 09:31:00",
+      iex>                  date: "2020-12-25 09:31:00",
       iex>                  type: 2}
       iex> MailerLite.Campaigns.send(campaign_id, send_options)
       iex> {:ok, response} = MailerLite.Campaigns.cancel(campaign_id)
@@ -138,7 +138,7 @@ defmodule MailerLite.Campaigns do
 
   ## Test
 
-      iex> new_campaign = %{groups: [6306138],
+      iex> new_campaign = %{groups: [24992054],
       iex>                  subject: "A regular email campaign",
       iex>                  type: "regular"}
       iex> {:ok, response} = MailerLite.Campaigns.new(new_campaign)
@@ -248,7 +248,7 @@ defmodule MailerLite.Campaigns do
 
   ## Example requests
 
-      new_campaign = %{groups: [2984475, 3237221],
+      new_campaign = %{groups: [24992054, 25000854],
                        subject: "A regular email campaign",
                        type: "regular"}
       MailerLite.Campaigns.new(new_campaign)
@@ -267,7 +267,7 @@ defmodule MailerLite.Campaigns do
 
   ## Tests
 
-      iex> new_campaign = %{groups: [6306138],
+      iex> new_campaign = %{groups: [24992054, 25000854],
       iex>                  subject: "A regular email campaign",
       iex>                  type: "regular"}
       iex> {:ok, response} = MailerLite.Campaigns.new(new_campaign)
@@ -358,7 +358,7 @@ defmodule MailerLite.Campaigns do
 
   ## Tests
 
-      iex> new_campaign = %{groups: [6306138],
+      iex> new_campaign = %{groups: [24992054, 25000854],
       iex>                  subject: "A temporary campaign",
       iex>                  type: "regular"}
       iex> {:ok, new_response} = MailerLite.Campaigns.new(new_campaign)
@@ -366,11 +366,11 @@ defmodule MailerLite.Campaigns do
       iex> is_map(response)
       true
 
-      iex> new_campaign = %{groups: [6306138],
+      iex> new_campaign = %{groups: [24992054, 25000854],
       iex>                  subject: "A temporary campaign",
       iex>                  type: "regular"}
       iex> send_options = %{analytics: 0,
-      iex>                  date: "2018-05-01 09:31:00",
+      iex>                  date: "2020-12-25 09:31:00",
       iex>                  type: 2}
       iex> {:ok, new_response} = MailerLite.Campaigns.new(new_campaign)
       iex> {:ok, response} = MailerLite.Campaigns.send(Map.get(new_response, "id"), send_options)

@@ -20,7 +20,7 @@ defmodule MailerLite.Groups do
                          resubscribe: false,
                          type: "unconfirmed"
                          }
-      MailerLite.Groups.add_subscriber(2345678, new_subscriber)
+      MailerLite.Groups.add_subscriber(24992054, new_subscriber)
 
   ## Example response
 
@@ -43,14 +43,14 @@ defmodule MailerLite.Groups do
       iex>                    name: "James Moon",
       iex>                    resubscribe: false,
       iex>                    type: "unconfirmed"}
-      iex> {:ok, subscriber} = MailerLite.Groups.add_subscriber(6322190, new_subscriber)
+      iex> {:ok, subscriber} = MailerLite.Groups.add_subscriber(24992054, new_subscriber)
       iex> is_map(subscriber)
       true
 
       iex> MailerLite.Groups.add_subscriber(0000001, %{})
       {:error, :not_found}
 
-      iex> MailerLite.Groups.add_subscriber("6322190", "name@domain.tld")
+      iex> MailerLite.Groups.add_subscriber("24992054", "name@domain.tld")
       {:error, :invalid_argument}
   """
   @spec add_subscriber(MailerLite.id, struct) :: {:ok, MailerLite.subscriber} | {:error, atom}
@@ -69,8 +69,8 @@ defmodule MailerLite.Groups do
 
   ## Example request
 
-      MailerLite.Groups.delete_subscriber(2345678, "james.moon.fake@gmail.com")
-      MailerLite.Groups.delete_subscriber(2345678, "1343965485")
+      MailerLite.Groups.delete_subscriber(24992054, "james.moon.fake@gmail.com")
+      MailerLite.Groups.delete_subscriber(24992054, "1343965485")
 
   ## Example response
 
@@ -83,14 +83,14 @@ defmodule MailerLite.Groups do
       iex>                    name: "James Moon",
       iex>                    resubscribe: false,
       iex>                    type: "unconfirmed"}
-      iex> MailerLite.Groups.add_subscriber(6322190, new_subscriber)
-      iex> MailerLite.Groups.delete_subscriber(6322190, "james.fakefake@googlemail.com")
+      iex> MailerLite.Groups.add_subscriber(24992054, new_subscriber)
+      iex> MailerLite.Groups.delete_subscriber(24992054, "james.fakefake@googlemail.com")
       {:ok}
 
       iex> MailerLite.Groups.delete_subscriber(0000001, "james.fakefake@googlemail.com")
       {:error, :not_found}
 
-      iex> MailerLite.Groups.delete_subscriber("6322190", 1343965485)
+      iex> MailerLite.Groups.delete_subscriber("24992054", 1343965485)
       {:error, :invalid_argument}
   """
   @spec delete_subscriber(MailerLite.id, String.t) :: {:ok} | {:error, atom}
