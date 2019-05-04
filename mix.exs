@@ -8,7 +8,7 @@ defmodule MailerLite.Mixfile do
     [app: :mailerlite,
      name: "MailerLite",
      version: @version,
-     elixir: "~> 1.4",
+     elixir: "~> 1.8",
      source_url: @github,
      package: package(),
      description: description(),
@@ -42,9 +42,9 @@ defmodule MailerLite.Mixfile do
   end
 
   defp deps do
-    [{:httpoison, "~> 0.11.1"},
-     {:poison, "~> 3.0"},
-     {:credo, "~> 0.8.1", only: [:dev, :test]},
-     {:ex_doc, "~> 0.14", only: :dev, runtime: false}]
+    [{:httpoison, "~> 1.5"},
+     {:poison, "~> 4.0"},
+     {:credo, "~> 1.0", only: [:dev, :test]},
+     {:ex_doc, "~> 0.20", only: :dev, runtime: false}]
   end
 end
