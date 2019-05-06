@@ -6,7 +6,7 @@
         included: ["lib/"]
       },
       check_for_updates: true,
-      strict: false,
+      strict: true,
       color: true,
       checks: [
         {Credo.Check.Consistency.ExceptionNames},
