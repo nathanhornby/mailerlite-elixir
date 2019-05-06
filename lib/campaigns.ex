@@ -101,8 +101,10 @@ defmodule MailerLite.Campaigns do
       iex>                  type: "regular"}
       iex> {:ok, new_response} = MailerLite.Campaigns.new(new_campaign)
       iex> campaign_id = Map.get(new_response, "id")
-      iex> send_options = %{analytics: 0,
-      iex>                  date: "2020-12-25 09:31:00",
+      iex> html = ~s(<h1>Title</h1><a href="{$unsubscribe}">Unsubscribe</a>)
+      iex> plain = "Open HTML newsletter: {$url}. Unsubscribe: {$unsubscribe}"
+      iex> MailerLite.Campaigns.upload_template(campaign_id, html, plain, false)
+      iex> send_options = %{date: "2020-12-25 09:31",
       iex>                  type: 2}
       iex> MailerLite.Campaigns.send(campaign_id, send_options)
       iex> {:ok, response} = MailerLite.Campaigns.cancel(campaign_id)
@@ -358,21 +360,16 @@ defmodule MailerLite.Campaigns do
 
   ## Tests
 
-      iex> new_campaign = %{groups: [24992054, 25000854],
+      iex> new_campaign = %{groups: [24992054],
       iex>                  subject: "A temporary campaign",
       iex>                  type: "regular"}
       iex> {:ok, new_response} = MailerLite.Campaigns.new(new_campaign)
-      iex> {:ok, response} = MailerLite.Campaigns.send(Map.get(new_response, "id"))
-      iex> is_map(response)
-      true
-
-      iex> new_campaign = %{groups: [24992054, 25000854],
-      iex>                  subject: "A temporary campaign",
-      iex>                  type: "regular"}
-      iex> send_options = %{analytics: 0,
-      iex>                  date: "2020-12-25 09:31:00",
+      iex> campaign_id = Map.get(new_response, "id")
+      iex> html = ~s(<h1>Title</h1><a href="{$unsubscribe}">Unsubscribe</a>)
+      iex> plain = "Open HTML newsletter: {$url}. Unsubscribe: {$unsubscribe}"
+      iex> MailerLite.Campaigns.upload_template(campaign_id, html, plain, false)
+      iex> send_options = %{date: "2020-12-25 09:31",
       iex>                  type: 2}
-      iex> {:ok, new_response} = MailerLite.Campaigns.new(new_campaign)
       iex> {:ok, response} = MailerLite.Campaigns.send(Map.get(new_response, "id"), send_options)
       iex> is_map(response)
       true

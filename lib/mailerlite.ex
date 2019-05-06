@@ -57,6 +57,7 @@ defmodule MailerLite do
       {:ok, %HTTPoison.Response{status_code: 204}} ->
         {:ok}
       {:ok, %HTTPoison.Response{status_code: 400}} ->
+        IO.puts response
         {:error, :bad_request}
       {:ok, %HTTPoison.Response{status_code: 404}} ->
         {:error, :not_found}
