@@ -1,7 +1,7 @@
 defmodule MailerLite.Mixfile do
   use Mix.Project
 
-  @version "0.2.0"
+  @version "0.3.0"
   @github  "https://github.com/nathanhornby/mailerlite-elixir"
 
   def project do
@@ -45,6 +45,7 @@ defmodule MailerLite.Mixfile do
     [{:httpoison, "~> 1.5"},
      {:poison, "~> 4.0"},
      {:credo, "~> 1.0", only: [:dev, :test]},
-     {:ex_doc, "~> 0.20", only: :dev, runtime: false}]
+     {:ex_doc, "~> 0.20", only: :dev, runtime: false},
+     {:inch_ex, "~> 2.0", only: :dev, runtime: false}]
   end
 end

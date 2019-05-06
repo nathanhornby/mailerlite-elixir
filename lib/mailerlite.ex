@@ -12,6 +12,11 @@ defmodule MailerLite do
   @type id :: non_neg_integer
 
   @typedoc """
+  UNIX timestamp integer
+  """
+  @type unix_timestamp :: non_neg_integer
+
+  @typedoc """
   MailerLite subscriber object
   """
   @type subscriber :: %{clicked: non_neg_integer,
@@ -51,24 +56,32 @@ defmodule MailerLite do
   end
 
   defp process_response(response) do
-    case response do
-      {:ok, %HTTPoison.Response{status_code: 200, body: body}} ->
-        {:ok, Poison.decode!(body, as: %{})}
-      {:ok, %HTTPoison.Response{status_code: 204}} ->
+    {status, message} = response
+
+    case status do
+      :ok -> status_map(message)
+      _ -> {:error, :network_error}
+    end
+  end
+
+  defp status_map(message) do
+    status_code = message.status_code
+
+    case status_code do
+      n when n in [200, 201] ->
+        {:ok, Poison.decode!(message.body, as: %{})}
+      204 ->
         {:ok}
-      {:ok, %HTTPoison.Response{status_code: 400}} ->
-        IO.puts response
+      400 ->
         {:error, :bad_request}
-      {:ok, %HTTPoison.Response{status_code: 404}} ->
+      404 ->
         {:error, :not_found}
-      {:ok, %HTTPoison.Response{status_code: 422}} ->
+      422 ->
         {:error, :unprocessable_entity}
-      {:ok, %HTTPoison.Response{status_code: 500}} ->
+      500 ->
         {:error, :server_error}
-      {_, %HTTPoison.Response{status_code: code, body: body}} ->
-        {code, body}
       _ ->
-        {:error, :network_error}
+        {:unknown, Poison.decode!(message.body, as: %{})}
     end
   end
 end

@@ -108,6 +108,7 @@ defmodule MailerLite.Campaigns do
       iex>                  type: 2}
       iex> MailerLite.Campaigns.send(campaign_id, send_options)
       iex> {:ok, response} = MailerLite.Campaigns.cancel(campaign_id)
+      iex> MailerLite.Campaigns.delete(campaign_id)
       iex> is_map(response)
       true
 
@@ -136,7 +137,7 @@ defmodule MailerLite.Campaigns do
 
   ## Example response
 
-      {:ok}
+      {:ok, %{"success" => true}}
 
   ## Test
 
@@ -144,8 +145,10 @@ defmodule MailerLite.Campaigns do
       iex>                  subject: "A regular email campaign",
       iex>                  type: "regular"}
       iex> {:ok, response} = MailerLite.Campaigns.new(new_campaign)
-      iex> MailerLite.Campaigns.delete(Map.get(response, "id"))
+      iex> campaign_id = Map.get(response, "id")
+      iex> MailerLite.Campaigns.delete(campaign_id)
       {:ok, %{"success" => true}}
+
   """
   @spec delete(MailerLite.id) :: {:ok, map} | {:error, atom}
   def delete(campaign) when is_integer(campaign) do
@@ -273,6 +276,8 @@ defmodule MailerLite.Campaigns do
       iex>                  subject: "A regular email campaign",
       iex>                  type: "regular"}
       iex> {:ok, response} = MailerLite.Campaigns.new(new_campaign)
+      iex> campaign_id = Map.get(response, "id")
+      iex> MailerLite.Campaigns.delete(campaign_id)
       iex> is_map(response)
       true
 
@@ -296,7 +301,7 @@ defmodule MailerLite.Campaigns do
   def send(_campaign), do: {:error, :invalid_argument}
 
   @doc ~S"""
-  Schedule and send a campaign that has `draft`status and has `step` value equal to `3`.
+  Schedule and send a campaign that has `draft` status and has `step` value equal to `3`.
 
   TODO Use Elixir native Date for input/output
 
@@ -371,6 +376,8 @@ defmodule MailerLite.Campaigns do
       iex> send_options = %{date: "2020-12-25 09:31",
       iex>                  type: 2}
       iex> {:ok, response} = MailerLite.Campaigns.send(Map.get(new_response, "id"), send_options)
+      iex> MailerLite.Campaigns.cancel(campaign_id)
+      iex> MailerLite.Campaigns.delete(campaign_id)
       iex> is_map(response)
       true
 
