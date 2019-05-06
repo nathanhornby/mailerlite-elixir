@@ -1,8 +1,4 @@
 engines:
   credo:
     enabled: true
-    channel: "beta"
-ratings:
-  paths:
-  - "**.ex"
-  - "**.exs"
+    strict: true
